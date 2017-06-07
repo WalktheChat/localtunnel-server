@@ -25,6 +25,10 @@ const argv = optimist
         default: 10,
         describe: 'maximum number of tcp sockets each client is allowed to establish at one time (the tunnels)'
     })
+    .options('ports-range', {
+        default: '',
+        describe: 'use this port range for openning tunnels, i.e: 2000-3000'
+    })
     .argv;
 
 if (argv.help) {
@@ -36,7 +40,8 @@ const server = require('../server')({
     max_tcp_sockets: argv['max-sockets'],
     secure: argv.secure,
     port: argv.port,
-    subHost: argv['sub-host']
+    subHost: argv['sub-host'],
+    portsRange: argv['ports-range']
 });
 
 server.listen(argv.port, () => {

@@ -29,6 +29,13 @@ bin/server --port 1234
 
 The localtunnel server is now running and waiting for client requests on port 1234. You will most likely want to set up a reverse proxy to listen on port 80 (or start localtunnel on port 80 directly).
 
+You may also pass a valid ports range that will be used by server 
+to allocate ports for tcp connections.
+
+```shell
+bin/server --ports-range 7000-9000
+```
+
 ## use your server
 
 You can now use your domain with the `--host` flag for the `lt` client.

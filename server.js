@@ -202,10 +202,20 @@ function new_client(id, opt, cb) {
     if (clients[id]) {
         id = rand_id();
     }
-
+    let portsRange
+    if (opt.portsRange) {
+        const [start, end] = opt.portsRange.split('-')
+            .map(x => parseInt(x))
+        if (!isNaN(start) && !isNaN(end)) {
+            portsRange = [start, end]
+        } else {
+            debug(`illegal ports range value ${opt.portsRange}`);
+        }
+    }
     const popt = {
         id: id,
-        max_tcp_sockets: opt.max_tcp_sockets
+        max_tcp_sockets: opt.max_tcp_sockets,
+        portsRange: portsRange            
     };
 
     const client = Proxy(popt);

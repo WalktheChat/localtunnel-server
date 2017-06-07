@@ -3,6 +3,7 @@ import EventEmitter from 'events';
 import log from 'bookrc';
 import Debug from 'debug';
 
+const getPort = require('getport')
 const debug = Debug('localtunnel:server');
 
 const Proxy = function(opt) {
@@ -15,6 +16,7 @@ const Proxy = function(opt) {
     self.sockets = [];
     self.waiting = [];
     self.id = opt.id;
+    self.portsRange = opt.portsRange    
 
     // default max is 10
     self.max_tcp_sockets = opt.max_tcp_sockets || 10;
@@ -52,19 +54,32 @@ Proxy.prototype.start = function(cb) {
 
         log.error(err);
     });
+    function listen(port) {
+        server.listen(port || 0, function () {
+            const port = server.address().port;
+            self.debug('tcp server listening on port: %d', port);
 
-    server.listen(function() {
-        const port = server.address().port;
-        self.debug('tcp server listening on port: %d', port);
-
-        cb(null, {
-            // port for lt client tcp connections
-            port: port,
-            // maximum number of tcp connections allowed by lt client
-            max_conn_count: self.max_tcp_sockets
+            cb(null, {
+                // port for lt client tcp connections
+                port: port,
+                // maximum number of tcp connections allowed by lt client
+                max_conn_count: self.max_tcp_sockets
+            });
         });
-    });
+    }
+    if (this.portsRange) {
+        const [start, end] = this.portsRange
+        getPort(start, end, function (err, port) {
+            if (err) {
+                self.debug(`could not allocate port from range: [${start}, ${end}]`);
+            }
+            listen(port)
+        })        
+    } else {
+        listen()
+    }
 
+    
     self._maybe_destroy();
 };
 

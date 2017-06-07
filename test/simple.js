@@ -5,7 +5,8 @@ var localtunnel = require('localtunnel');
 
 var localtunnel_server = require('../server')({
     max_tcp_sockets: 2,
-    subHost: ['nested.sub']
+    subHost: ['nested.sub'],
+    portsRange: '7000-7010'
 });
 
 var lt_server_port
@@ -75,6 +76,8 @@ test('set up localtunnel client (sub-host)', function (done) {
     };
 
     localtunnel(test._fake_port, opt, function (err, tunnel) {
+        const remote_port = tunnel.tunnel_cluster._opt.remote_port
+        assert(remote_port >= 7000 && remote_port <= 7010, 'remote port in range')
         assert.ifError(err);
         var url = tunnel.url;
         assert.ok(new RegExp('^http:\/\/.*nested.sub.host.dev:' + lt_server_port + '$').test(url));
