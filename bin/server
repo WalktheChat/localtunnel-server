@@ -44,7 +44,7 @@ const server = require('../server')({
   subHost: argv['sub-host']
 });
 
-server.listen(argv.sslPort, () => {
+server.listen(argv['ssl-port'], () => {
   debug('server listening on port: %d', server.address().port);
 });
 
