@@ -315,13 +315,11 @@ module.exports = function (opt) {
     });
   });
 
-  require('http').createServer(lex.middleware(require('redirect-https')())).listen(80, function () {
+  require('http').createServer(lex.middleware(require('redirect-https')())).listen(opt.port, function () {
     console.log("Listening for ACME http-01 challenges on", this.address());
   });
 
-  const server = require('https').createServer(lex.httpsOptions, lex.middleware(app)).listen(443, function () {
-    console.log("Listening for ACME tls-sni-01 challenges and serve app on", this.address());
-  });
+  const server = require('https').createServer(lex.httpsOptions, lex.middleware(app));
 
   server.on('request', function (req, res) {
 
