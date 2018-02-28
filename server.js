@@ -234,9 +234,34 @@ function new_client(id, opt, cb) {
 }
 
 // returns an instance of node-greenlock with additional helper methods
-var lex = require('greenlock-express').create({
-  // set to https://acme-v01.api.letsencrypt.org/directory in production
-  server: 'staging'
+const lex = require('greenlock-express').create({
+  server: 'staging', //'https://acme-v01.api.letsencrypt.org/directory',
+  challenges: {
+    'http-01': require('le-challenge-fs').create({webrootPath: '~/letsencrypt/var/acme-challenges'})
+  },
+  agreeTos: true,
+  approveDomains: function approveDomains(opts, certs, cb) {
+    if (certs) {
+      opts.domains = certs.altnames;
+    } else {
+      opts.email = 'oliver.jessner@gmail.com';
+      opts.agreeTos = true;
+      opts.domains = ['eu.ganescha.io'];
+    }
+
+    cb(null, {options: opts, certs: certs});
+  },
+  store: require('le-store-certbot').create({
+    configDir: '/etc/letsencrypt',
+    privkeyPath: ':configDir/live/:hostname/privkey.pem',
+    fullchainPath: ':configDir/live/:hostname/fullchain.pem',
+    certPath: ':configDir/live/:hostname/cert.pem',
+    chainPath: ':configDir/live/:hostname/chain.pem',
+    workDir: '/var/lib/letsencrypt',
+    logsDir: '/var/log/letsencrypt',
+    webrootPath: '~/letsencrypt/srv/www/:hostname/.well-known/acme-challenge',
+    debug: false
+  })
 });
 
 module.exports = function (opt) {
@@ -319,7 +344,7 @@ module.exports = function (opt) {
     console.log("Listening for ACME http-01 challenges on", this.address());
   });
 
-  const server = require('https').createServer(lex.httpsOptions, lex.middleware(app));
+  const server = require('https').createServer(lex.httpsOptions);
 
   server.on('request', function (req, res) {
 
@@ -335,9 +360,8 @@ module.exports = function (opt) {
     if (maybe_bounce(req, res, null, null, opt)) {
       return;
     }
-    ;
 
-    app(req, res);
+    lex.middleware(app)(req, res);
   });
 
   server.on('upgrade', function (req, socket, head) {
@@ -352,7 +376,6 @@ module.exports = function (opt) {
     if (maybe_bounce(req, null, socket, head, opt)) {
       return;
     }
-    ;
 
     socket.destroy();
   });
